@@ -5,8 +5,9 @@ import { ACCESS_TOKEN } from '../store/mutation-types'
 const routerHistory = createWebHistory()
 
 function isAuthenticated() {
-  const token = localStorage.getItem(ACCESS_TOKEN)
-  return token
+  return true;
+  // const token = localStorage.getItem(ACCESS_TOKEN)
+  // return token
 }
 
 const router = createRouter({

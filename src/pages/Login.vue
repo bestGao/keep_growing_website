@@ -50,6 +50,7 @@ import { reactive, toRaw, getCurrentInstance, onMounted } from 'vue';
 import { useForm } from '@ant-design-vue/use';
 import { fetchData } from '../utils/tool'
 export default {
+  name: 'Login',
   setup () {
     const { ctx } = getCurrentInstance()
     onMounted(() => {
