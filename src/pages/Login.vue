@@ -1,3 +1,4 @@
+<!-- 注册/登录 -->
 <template>
   <a-form
     :label-col="labelCol"
@@ -22,11 +23,11 @@
     <a-form-item
       v-if="stateRef.pageType === 'registry'"
       label="手机号"
-      v-bind="validateInfos.telphone"
+      v-bind="validateInfos.telephone"
     >
       <a-input
-        type="telphone"
-        v-model:value="modelRef.telphone"
+        type="telephone"
+        v-model:value="modelRef.telephone"
       />
     </a-form-item>
     <a-form-item :wrapper-col="{ span: 14, offset: 4 }">
@@ -34,7 +35,14 @@
         type="primary"
         @click="onSubmit"
       >
-        {{stateRef.pageType === 'login'?'登录': '注册'}}
+        注册
+      </a-button>
+      <a-button
+        style="margin-left: 10px;"
+        type="primary"
+        @click="onSubmit"
+      >
+        登录
       </a-button>
       <a-button
         style="margin-left: 10px;"
@@ -48,13 +56,14 @@
 <script>
 import { reactive, toRaw, getCurrentInstance, onMounted } from 'vue';
 import { useForm } from '@ant-design-vue/use';
-import { fetchData } from '../utils/tool'
+import { ACCESS_TOKEN } from '../store/mutation-types'
+import { fetchData, phonePattern } from '../utils/tool'
 export default {
   name: 'Login',
   setup () {
     const { ctx } = getCurrentInstance()
     onMounted(() => {
-      // console.log('ctx', ctx)
+      // console.log(ctx.$router.getRoutes())
     })
     const stateRef = reactive({
       pageType: 'login'
@@ -62,28 +71,33 @@ export default {
     const modelRef = reactive({
       username: '',
       password: '',
-      telphone: ''
+      telephone: ''
     });
-    const rulesRef = reactive({
+    const rules = {
       username: [
         {
           required: true,
           message: '请输入用户名',
         },
       ],
-      telphone: [
-        {
-          required: true,
-          message: '请输入手机号',
-        },
-      ],
       password: [
         {
           required: true,
-          message: 'Please select region',
+          message: '请输入密码',
         },
       ],
-    });
+      telephone: [
+        {
+          required: stateRef.pageType === 'registry' ? true : false,
+          message: '请输入手机号',
+        },
+        {
+          pattern: phonePattern,
+          message: '请输入正确的手机号'
+        }
+      ]
+    }
+    const rulesRef = reactive(rules);
     const { resetFields, validate, validateInfos } = useForm(modelRef, rulesRef);
     const onSubmit = e => {
       e.preventDefault();
@@ -94,11 +108,11 @@ export default {
             password: modelRef.password,
           }
           if (stateRef.pageType === 'registry') {
-            submitPayload.telphone = modelRef.telphone
+            submitPayload.telephone = modelRef.telephone
           }
-          const body = toRaw(modelRef);
+          const body = toRaw(submitPayload);
           const payload = {
-            url: stateRef.pageType === 'login' ? '/keep_growing/web/login' : '/keep_growing/web/register',
+            url: stateRef.pageType === 'login' ? '/keep_growing/web/login' : '/keep_growing/web/registry',
             config: {
               method: 'post',
               body: JSON.stringify(body),
@@ -107,21 +121,18 @@ export default {
           const res = await fetchData(payload)
           const { code, msg, data } = res
           if (code === 200) {
-            console.log(data)
+            ctx.$message.success(msg)
             if (stateRef.pageType === 'registry') {
-              console.log('ctx', ctx)
+              // 注册成功
+              ctx.stateRef.pageType = 'login'
             } else {
-              console.log('ctx', ctx)
+              const { token } = data
+              localStorage.setItem(ACCESS_TOKEN, token)
+              // 登录成功
+              ctx.$router.replace({ name: "Home" })
             }
           } else {
-            console.log('ctx', ctx)
             ctx.$message.error(msg)
-            if (code === 405 && msg === '用户不存在') {
-              setTimeout(() => {
-                ctx.$message.info('即将跳转到注册页')
-                ctx.stateRef.pageType = 'registry'
-              }, 1000);
-            }
           }
         })
         .catch(err => {

@@ -1,27 +1,51 @@
 <template>
-	<view class="container">
-	<v-md-editor v-model="stateRef.article" height="400px"></v-md-editor>
-	</view>
+  <view class="container">
+    <a-form
+      :label-col="labelCol"
+      :wrapper-col="wrapperCol"
+    >
+      <a-form-item label="文章">
+        <v-md-editor
+          v-model="stateRef.article"
+          height="400px"
+        ></v-md-editor>
+      </a-form-item>
+      <a-form-item :wrapper-col="{ span: 14, offset: 4 }">
+        <a-button
+          type="primary"
+          @click="handleSave"
+        >
+          保存
+        </a-button>
+        <a-button
+          style="margin-left: 10px;"
+          type="primary"
+          @click="toLogout"
+        >
+          退出登录
+        </a-button>
+      </a-form-item>
+    </a-form>
+  </view>
 </template>
 <script>
-import { reactive, toRaw, getCurrentInstance, onMounted } from 'vue';
+import { watch, reactive, toRaw, getCurrentInstance, onMounted } from 'vue';
 import { useForm } from '@ant-design-vue/use';
-import { fetchData } from '../utils/tool'
+import { USER_INFO } from '../store/mutation-types'
+import { fetchData, handleLogout } from '../utils/tool'
 export default {
-	name: 'Home',
-	setup () {
+  name: 'Home',
+  setup () {
     const { ctx } = getCurrentInstance()
     onMounted(() => {
       // console.log('ctx', ctx)
     })
     const stateRef = reactive({
-      pageType: 'login',
-	article: '',
+      article: ''
     })
-    const modelRef = reactive({
-      username: '',
-      password: '',
-      telphone: ''
+    watch(stateRef, (val) => {
+      // console.log('watch2', val.article);
+      // 一段时间内自动保存
     });
     const rulesRef = reactive({
       username: [
@@ -43,52 +67,33 @@ export default {
         },
       ],
     });
-    const { resetFields, validate, validateInfos } = useForm(modelRef, rulesRef);
-    const onSubmit = e => {
-      e.preventDefault();
-      validate()
-        .then(async () => {
-          const submitPayload = {
-            username: modelRef.username,
-            password: modelRef.password,
-          }
-          if (stateRef.pageType === 'registry') {
-            submitPayload.telphone = modelRef.telphone
-          }
-          const body = toRaw(modelRef);
-          const payload = {
-            url: stateRef.pageType === 'login' ? '/keep_growing/web/login' : '/keep_growing/web/register',
-            config: {
-              method: 'post',
-              body: JSON.stringify(body),
-            }
-          }
-          const res = await fetchData(payload)
-          const { code, msg, data } = res
-          if (code === 200) {
-            console.log(data)
-            if (stateRef.pageType === 'registry') {
-              console.log('ctx', ctx)
-            } else {
-              console.log('ctx', ctx)
-            }
-          } else {
-            console.log('ctx', ctx)
-            ctx.$message.error(msg)
-            if (code === 405 && msg === '用户不存在') {
-              setTimeout(() => {
-                ctx.$message.info('即将跳转到注册页')
-                ctx.stateRef.pageType = 'registry'
-              }, 1000);
-            }
-          }
-        })
-        .catch(err => {
-          console.log('error', err);
-        });
+    async function handleSave() {
+      const { id } = localStorage.getItem(USER_INFO)
+      console.log(stateRef.article)
+      const payload = {
+        url: '/keep_growing/web/save_article',
+        userId: id,
+        article: stateRef.article
+      }
+      const callback = await fetchData(payload)
+      console.log(callback)
+    }
+    const toLogout = () => {
+      ctx.$modal.confirm({
+        content: '确定退出吗？',
+        maskClosable: true,
+        okText: '确定',
+        cancelText: '取消',
+        onOk: function () {
+          handleLogout(ctx)
+        },
+      })
     };
     return {
-      onSubmit,
+      labelCol: { span: 2 },
+      wrapperCol: { span: 22 },
+      handleSave,
+      toLogout,
       stateRef
     };
   },
