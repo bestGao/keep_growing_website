@@ -56,7 +56,7 @@
 <script>
 import { reactive, toRaw, getCurrentInstance, onMounted } from 'vue';
 import { useForm } from '@ant-design-vue/use';
-import { ACCESS_TOKEN } from '../store/mutation-types'
+import { ACCESS_TOKEN, USER_INFO } from '../store/mutation-types'
 import { fetchData, phonePattern } from '../utils/tool'
 export default {
   name: 'Login',
@@ -126,8 +126,9 @@ export default {
               // 注册成功
               ctx.stateRef.pageType = 'login'
             } else {
-              const { token } = data
+              const { token, userinfo } = data
               localStorage.setItem(ACCESS_TOKEN, token)
+              localStorage.setItem(USER_INFO, JSON.stringify(userinfo))
               // 登录成功
               ctx.$router.replace({ name: "Home" })
             }

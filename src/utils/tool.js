@@ -1,5 +1,5 @@
+import { notification } from 'ant-design-vue'
 import { ACCESS_TOKEN } from '../store/mutation-types'
-
 export const isProduction = /bhg\.htv2x\.com|gao\.com/.test(
   window.location.hostname
 )
@@ -20,7 +20,7 @@ export function handleLogout(ctx) {
   }, 100)
 }
 
-export function fetchData(options = {}) {
+export function fetchData(options = {}, ctx) {
   const { config = {} } = options
   const url = prefix + options.url
   if (!url) {
@@ -50,6 +50,16 @@ export function fetchData(options = {}) {
         throw error
       }
       const result = await res.json()
+
+      if (result.code === 50012) {
+        notification.error({
+          message: '登录状态无效，请重新登录',
+          description: result.msg,
+          onClick: () => {
+            ctx.$router.replace({ path: '/login' })
+          },
+        })
+      }
       return result
     })
     .catch((err) => {

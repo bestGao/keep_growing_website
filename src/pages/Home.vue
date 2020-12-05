@@ -41,7 +41,8 @@ export default {
       // console.log('ctx', ctx)
     })
     const stateRef = reactive({
-      article: ''
+      article: '',
+      articleId: 0,
     })
     watch(stateRef, (val) => {
       // console.log('watch2', val.article);
@@ -67,16 +68,30 @@ export default {
         },
       ],
     });
-    async function handleSave() {
-      const { id } = localStorage.getItem(USER_INFO)
-      console.log(stateRef.article)
+    async function handleSave () {
+      const { id: userId, username } = JSON.parse(localStorage.getItem(USER_INFO))
+      const body = {
+        id: stateRef.articleId,
+        title: 'cesd',
+        article: stateRef.article,
+        summary: 'dss',
+        username,
+        userId
+      }
       const payload = {
         url: '/keep_growing/web/save_article',
-        userId: id,
-        article: stateRef.article
+        config: {
+          method: 'post',
+          body: JSON.stringify(body)
+        }
       }
-      const callback = await fetchData(payload)
-      console.log(callback)
+      const callback = await fetchData(payload, ctx)
+      const { code, msg, data } = callback
+      if (code === 200) {
+        ctx.$message.success(msg)
+      } else {
+        ctx.$message.error(msg)
+      }
     }
     const toLogout = () => {
       ctx.$modal.confirm({
