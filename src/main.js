@@ -32,3 +32,4 @@ app.use(MarkDownEditor)
 app.config.globalProperties.$message = message
 app.config.globalProperties.$modal = Modal
 app.mount('#app')
+console.log(app)

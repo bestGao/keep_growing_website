@@ -6,8 +6,11 @@
 
 <script>
 export default {
-  name: 'App'
-}
+  name: "App",
+  mounted() {
+    document.dispatchEvent(new Event("render-event"));
+  }
+};
 </script>
 
 <style>
