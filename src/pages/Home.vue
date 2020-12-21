@@ -74,7 +74,7 @@ export default {
         id: stateRef.articleId,
         title: 'cesd',
         article: stateRef.article,
-        summary: 'dss',
+        tags: ['dss'],
         username,
         userId
       }
